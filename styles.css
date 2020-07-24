@@ -1,0 +1,8 @@
+.wiz-container {
+    display: block;
+}
+
+.wiz-step__container {
+    display: grid;
+    padding: 10px;
+}
