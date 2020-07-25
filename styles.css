@@ -1,8 +1,16 @@
-.wiz-container {
+.wiz {
     display: block;
 }
 
-.wiz-step__container {
+.wiz-display {
     display: grid;
-    padding: 10px;
+}
+
+.wiz-step {
+    display: grid;
+    margin: 10px;
+}
+
+.hidden {
+    display: none;
 }
