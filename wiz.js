@@ -26,27 +26,33 @@ const Wiz = (function () {
     }
 
     Wiz.prototype = {
-        addStep: function (options) {
-            // Create step background div
-            if (this.getStep(options.id)) {
-                throw new Error(`Wiz Step Error: Error adding step, step id ${options.id} already exists`);
-            } else if (options.isFinal && this.hasFinalStep()) {
+        addStep: function (options, index) {
+            if (index) {
+                if (index < 0 || this.state.numSteps < index) {
+                    throw new Error('Wiz Step Error: Error inserting step, step index invalid.');
+                }
+            }
+
+            if (options.isFinal && this.hasFinalStep()) {
                 throw new Error(`Wiz Step Error: Error adding step, step with isFinal already exists`);
             }
             const newStep = new Step(
                 this._createStepContainer(),
+                index ? index : this.state.numSteps,
                 options,
                 this.state.numSteps,
                 this.onStepNext,
                 this.onStepBack
             );
-            this._steps.push(newStep);
-            this.state.numSteps += 1;
+            if (index === undefined || index === this.state.numSteps) {
+                this._steps.push(newStep);
+            } else {
+                this._steps.splice(index, 0, newStep);
+                // Update steps with new ids after insertion
+                this._steps.slice(index + 1, this.state.numSteps).map((step) => {step.id++;})
+            }
+            this.state.numSteps++;
             return this;
-        },
-
-        insertStep: function (step, position) {
-            // TODO: Complete
         },
 
         getStep: function (id) {
@@ -66,6 +72,39 @@ const Wiz = (function () {
 
         hasFinalStep: function () {
             return this._steps.filter(step => step.isFinal === true).length > 0;
+        },
+
+        onStepNext: function () {
+            // Last step
+            if (this.state.currentStep + 1 === this.state.numSteps) {
+                this.onSubmit();
+            } else {
+                this._renderStep(this.state.currentStep + 1);
+                this.state.currentStep++;
+            }
+        },
+
+        onStepBack: function () {
+            if (this.state.currentStep > 0) {
+                this._renderStep(this.state.currentStep - 1);
+                this.state.currentStep--;
+            }
+        },
+
+        onSubmit: function () {
+            // TODO: Complete
+            return null;
+        },
+
+        _renderStep: function (id) {
+            try {
+                const currentStep = this.getStep(this.state.currentStep);
+                const newStep = this.getStep(id);
+                this.container.removeChild(currentStep.getElement('container').getComponent());
+                this.container.appendChild(newStep.getElement('container').getComponent());
+            } catch {
+                throw new Error(`Wiz Step Error: Error rendering step ${id}.`);
+            }
         },
 
         _initContainer: function (container) {
@@ -95,7 +134,6 @@ const Wiz = (function () {
                     throw new Error("Wiz Display Error: Invalid position.")
 
             }
-            this.container.appendChild(stepContainer);
             return stepContainer;
         },
 
@@ -193,14 +231,6 @@ const Wiz = (function () {
                 config.preventBack = false;
             }
             this.stepsConfig = config;
-        },
-
-        onStepNext: function (config) {
-            // TODO: Complete
-        },
-
-        onStepBack: function (config) {
-            // TODO: Complete
         }
     }
 
@@ -391,6 +421,7 @@ const Wiz = (function () {
                 name: 'stepBack',
                 noSize: true,
                 isHidden: this.preventBack,
+                textContent: 'BACK',
                 onChange: (e) => {
                     e.preventDefault();
                     this.onStepBack(e);
@@ -400,6 +431,7 @@ const Wiz = (function () {
                 name: 'stepNext',
                 noSize: true,
                 isHidden: this.preventBack,
+                textContent: this.isFinal ? 'FINISH' : 'NEXT',
                 onChange: (e) => {
                     e.preventDefault();
                     this.onStepNext(e);
@@ -409,9 +441,7 @@ const Wiz = (function () {
             // TODO: Allow user to specify button text
             const stepBack = this.getElement('stepBack');
             const stepNext = this.getElement('stepNext');
-            stepBack.getComponent().textContent = 'BACK';
             stepBack.setClass('wiz-nav__step-back');
-            stepNext.getComponent().textContent = this.isFinal ? 'FINISH' : 'NEXT';
             stepNext.setClass('wiz-nav__step-next');
         },
 
@@ -447,6 +477,15 @@ const Wiz = (function () {
         },
     }
 
+    function WizText(step, options) {
+        const element = document.createElement('DIV')
+        const text = document.createTextNode(options.textContent);
+        element.appendChild(text);
+        WizElement.call(this, element, step, options);
+    }
+
+    WizText.prototype = WizElement;
+
     function WizButton(step, options) {
         if (!options.onChange) {
             options.onChange = () => true;
@@ -454,6 +493,7 @@ const Wiz = (function () {
         this.onChange = options.onChange;
         const element = document.createElement('BUTTON')
         element.addEventListener('click', (event) => this.onChange(event, this));
+        element.textContent = options.textContent;
         WizElement.call(this, element, step, options);
     }
 
