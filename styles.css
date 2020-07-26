@@ -8,7 +8,18 @@
 
 .wiz-step {
     display: grid;
-    margin: 10px;
+    padding: 10px;
+}
+
+.wiz-nav {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr);
+    padding: 10px;
+    height: 100px;
+}
+
+.wiz-nav__step-back {
+    grid-column-end: span 3;
 }
 
 .hidden {

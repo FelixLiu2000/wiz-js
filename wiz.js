@@ -29,19 +29,19 @@ const Wiz = (function () {
         addStep: function (options) {
             // Create step background div
             if (this.getStep(options.id)) {
-                const newStep = new Step(
-                    this._createStepContainer(),
-                    options,
-                    this.state.numSteps,
-                    this.onStepNext,
-                    this.onStepBack
-                );
-                this._createNavButtons();
-                this._steps.push(newStep);
-                this.state.numSteps += 1;
-            } else {
-                throw new Error(`Wiz Step Error: Error creating step, step id ${options.id} already exists`)
+                throw new Error(`Wiz Step Error: Error adding step, step id ${options.id} already exists`);
+            } else if (options.isFinal && this.hasFinalStep()) {
+                throw new Error(`Wiz Step Error: Error adding step, step with isFinal already exists`);
             }
+            const newStep = new Step(
+                this._createStepContainer(),
+                options,
+                this.state.numSteps,
+                this.onStepNext,
+                this.onStepBack
+            );
+            this._steps.push(newStep);
+            this.state.numSteps += 1;
             return this;
         },
 
@@ -64,9 +64,9 @@ const Wiz = (function () {
             return this._steps;
         },
 
-        /*hasFinalStep: function () {
-            return this.steps.filter(step => step.isFinal === true).length > 0;
-        },*/
+        hasFinalStep: function () {
+            return this._steps.filter(step => step.isFinal === true).length > 0;
+        },
 
         _initContainer: function (container) {
             if (typeof container === 'string') {
@@ -99,23 +99,33 @@ const Wiz = (function () {
             return stepContainer;
         },
 
-        _createNavButtons: function () {
-            return true;
-        },
-
         _initLayout: function (layout) {
             layout = layout || {};
             layout.stepsContent = +layout.stepsContent || 0;
             layout.stepsDisplay = +layout.stepsDisplay || 0;
-            layout.stepsNav = +layout.stepsNav || 0;
-            if (layout.stepsContent === 0 && 0 < layout.stepsDisplay && layout.stepsDisplay < 1) {
-                layout.stepsContent = 1 - layout.stepsDisplay;
-            } else if (0 < layout.stepsContent && layout.stepsContent < 1 && layout.stepsDisplay === 0) {
-                layout.stepsDisplay = 1 - layout.stepsContent;
+            let useDefault = false;
+
+            if (layout.stepsContent === 0 && layout.stepsDisplay === 0) {
+                useDefault = true;
+            } else if (0 <= layout.stepsContent && 0 <= layout.stepsDisplay) {
+                // Set optional parameters
+                if (layout.stepsContent === 0) {
+                    layout.stepsContent = 1 - layout.stepsDisplay;
+                } else if (layout.stepsDisplay === 0) {
+                    layout.stepsDisplay = 1 - layout.stepsDisplay;
+                }
+                // Ensure layout parameters add to 1
+                if (layout.stepsContent + layout.stepsDisplay !== 1) {
+                    console.error('Wiz Option Error: Layout must add to 1.');
+                    useDefault = true;
+                }
             } else {
-                console.error('Wiz Option Error: Invalid Layout (layout fields must add to 1).');
-                // Set defaults;
-                layout.stepContent = 0.8;
+                console.error('Wiz Option Error: Invalid Layout.');
+                useDefault = true;
+            }
+
+            if (useDefault) {
+                layout.stepsContent = 0.8;
                 layout.stepsDisplay = 0.2;
             }
             this.layout = layout;
@@ -203,11 +213,12 @@ const Wiz = (function () {
         this._initOptions(options);
         this._initContainer(container);
         this._initEventHandlers();
+        this._initNavButtons();
     }
 
     Step.prototype = {
 
-        addElement: function (element, options) {
+        addElement: function (element, options, parent) {
             let newWizElement = null;
             if (options.name === undefined) {
                 throw new Error('Wiz Element Error: Error adding element, missing name.');
@@ -222,6 +233,9 @@ const Wiz = (function () {
                     case 'WizSwitch':
                         newWizElement = new WizSwitch(this, options);
                         break;
+                    case 'WizButton':
+                        newWizElement = new WizButton(this, options);
+                        break;
                     default:
                         throw new Error('Wiz Element Error: Error adding element, predefined element does not exist.')
                 }
@@ -230,8 +244,23 @@ const Wiz = (function () {
             } else {
                 throw new Error('Wiz Element Error: Error adding element, element provided is invalid.')
             }
-            this.getElement('container').appendChild(newWizElement.getComponent());
+
+            // Add element as child of step container
+            if (parent === undefined && newWizElement.name !== 'container') {
+                this.getElement('container').appendChild(newWizElement.getComponent());
+            } else if (newWizElement.name !== 'container') {
+                try {
+                    this.getElement(parent).appendChild(newWizElement.getComponent())
+                } catch (e) {
+                    if (!this.getElement(parent)) {
+                        throw new Error(`Wiz Element Error: Error adding element, parent ${parent} does not exist.`);
+                    }
+                    throw new Error(`Wiz Element Error: Error adding element to parent ${parent}`);
+                }
+            }
+            // Add the new element to elements object
             this._elements[newWizElement.name] = newWizElement;
+            return this;
         },
 
         on: function (event, handler) {
@@ -268,7 +297,7 @@ const Wiz = (function () {
                     }
                     break;
                 default:
-                    throw new Error("Wiz Event Error: Event does not exist.");
+                    console.error('Wiz Event Error: Event ${event} is unspecified.');
             }
             return this;
         },
@@ -290,6 +319,7 @@ const Wiz = (function () {
                 header = null,
                 isHidden = false,
                 isOptional = false,
+                isFinal = false,
                 template = null,
                 numColumns = 12,
                 rowGap = '10px',
@@ -310,6 +340,7 @@ const Wiz = (function () {
             this.header = header;
             this.isHidden = isHidden;
             this.isOptional = isOptional;
+            this.isFinal = isFinal;
             this.template = template;
             this.hideNavButtons = hideNavButtons;
             this.preventBack = preventBack;
@@ -319,6 +350,7 @@ const Wiz = (function () {
             this.onStepBackPrevented = onStepBackPrevented;
             this.rowGap = rowGap;
             this.columnGap = columnGap;
+
             if (this.template) {
                 this._initTemplateOptions(options.template);
             }
@@ -349,6 +381,37 @@ const Wiz = (function () {
                     console.error('Wiz Option Error: Invalid Template.');
                     break;
             }
+        },
+
+        _initNavButtons: function () {
+            const navContainer = document.createElement('DIV');
+            this.addElement(navContainer, {
+                name: 'navContainer',
+                noSize: true,
+                isHidden: this.hideNavButtons,
+                className: 'wiz-nav'
+            }).addElement('WizButton', {
+                name: 'stepBack',
+                noSize: true,
+                isHidden: this.preventBack,
+                onChange: (e) => {
+                    e.preventDefault();
+                    this.onStepBack(e);
+                },
+                className: 'wiz-nav__step-back'
+            }, 'navContainer').addElement('WizButton', {
+                name: 'stepNext',
+                noSize: true,
+                isHidden: this.preventBack,
+                onChange: (e) => {
+                    e.preventDefault();
+                    this.onStepNext(e);
+                },
+                className: 'wiz-nav__step-back'
+            }, 'navContainer');
+            // TODO: Allow user to specify button text
+            this.getElement('stepBack').getComponent().textContent = 'BACK';
+            this.getElement('stepNext').getComponent().textContent = this.isFinal ? 'FINISH' : 'NEXT';
         },
 
         getElement: function (name) {
@@ -383,6 +446,18 @@ const Wiz = (function () {
         },
     }
 
+    function WizButton(step, options) {
+        if (!options.onChange) {
+            options.onChange = () => true;
+        }
+        this.onChange = options.onChange;
+        const element = document.createElement('BUTTON')
+        element.addEventListener('click', (event) => this.onChange(event, this));
+        WizElement.call(this, element, step, options);
+    }
+
+    WizButton.prototype = WizElement;
+
     function WizSwitch(step, options) {
         if (!options.onChange) {
             options.onChange = () => true;
@@ -397,6 +472,7 @@ const Wiz = (function () {
     WizSwitch.prototype = WizElement;
 
     function WizElement(component, step, options) {
+        // TODO: Add event listener method for WizElement, generalize WizSwitch & WizButton
         this._step = step;
         this._initOptions(options);
         this._initComponent(component);
@@ -420,21 +496,24 @@ const Wiz = (function () {
                 const numColumns = this._step.numColumns;
                 if (isNaN(width) || width < 0 || numColumns < width) {
                     console.error(`Wiz Element Error: Width must be an integer between 1 and ${numColumns}`);
-                    this.width = 1;
+                    this.width = '1';
                 } else {
-                    this.width = parseInt(width);
+                    this.width = width;
                 }
                 this.height = height;
             }
             this.name = name;
             this._isHidden = isHidden;
             this.className = className;
+            this.noSize = noSize;
         },
 
         _initComponent: function (element) {
             this._component = element;
-            this.setStyle(`height:${this.height}; grid-column-end:span ${this.width}`);
-            if (this.isHidden ) {
+            if (!this.noSize) {
+                this.setStyle(`height:${this.height}; grid-column-end:span ${this.width}`);
+            }
+            if (this.isHidden) {
                 this.hide();
             }
             if (this.className) {
@@ -472,7 +551,7 @@ const Wiz = (function () {
             return this;
         },
 
-        getStep: function() {
+        getStep: function () {
             return this._step;
         }
     }
