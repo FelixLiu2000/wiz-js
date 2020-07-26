@@ -1,3 +1,7 @@
+.hidden {
+    display: none;
+}
+
 .wiz {
     display: block;
 }
@@ -19,9 +23,42 @@
 }
 
 .wiz-nav__step-back {
-    grid-column-end: span 3;
+    grid-column-start: 8;
+    grid-column-end: span 2;
+    width: 100%;
 }
 
-.hidden {
-    display: none;
+.wiz-nav__step-next {
+    grid-column-start: 10;
+    grid-column-end: span 2;
+    width: 100%;
+}
+
+.wiz-button--primary {
+    background-color: darkblue;
+    padding-left: 16px;
+    padding-right: 16px;
+    text-align: center;
+    color: white;
+    border-radius: 4px;
+    transition-duration: 0.4s
+}
+
+.wiz-button--primary:hover {
+    background-color: rgba(0,0,139,0.96);
+}
+
+.wiz-button--secondary {
+    background-color: rgba(0,0,139,0);
+    padding-left: 16px;
+    padding-right: 16px;
+    text-align: center;
+    color: darkblue;
+    border: 1px solid gray;
+    border-radius: 4px;
+    transition-duration: 0.4s
+}
+
+.wiz-button--secondary:hover {
+    background-color: rgba(0,0,139,0.04);
 }

@@ -230,9 +230,6 @@ const Wiz = (function () {
             // Use predefined Wiz elements
             if (typeof element === 'string') {
                 switch (element) {
-                    case 'WizSwitch':
-                        newWizElement = new WizSwitch(this, options);
-                        break;
                     case 'WizButton':
                         newWizElement = new WizButton(this, options);
                         break;
@@ -398,7 +395,7 @@ const Wiz = (function () {
                     e.preventDefault();
                     this.onStepBack(e);
                 },
-                className: 'wiz-nav__step-back'
+                className: 'wiz-button--secondary'
             }, 'navContainer').addElement('WizButton', {
                 name: 'stepNext',
                 noSize: true,
@@ -407,11 +404,15 @@ const Wiz = (function () {
                     e.preventDefault();
                     this.onStepNext(e);
                 },
-                className: 'wiz-nav__step-back'
+                className: 'wiz-button--primary'
             }, 'navContainer');
             // TODO: Allow user to specify button text
-            this.getElement('stepBack').getComponent().textContent = 'BACK';
-            this.getElement('stepNext').getComponent().textContent = this.isFinal ? 'FINISH' : 'NEXT';
+            const stepBack = this.getElement('stepBack');
+            const stepNext = this.getElement('stepNext');
+            stepBack.getComponent().textContent = 'BACK';
+            stepBack.setClass('wiz-nav__step-back');
+            stepNext.getComponent().textContent = this.isFinal ? 'FINISH' : 'NEXT';
+            stepNext.setClass('wiz-nav__step-next');
         },
 
         getElement: function (name) {
@@ -457,19 +458,6 @@ const Wiz = (function () {
     }
 
     WizButton.prototype = WizElement;
-
-    function WizSwitch(step, options) {
-        if (!options.onChange) {
-            options.onChange = () => true;
-        }
-        this.onChange = options.onChange;
-        const element = document.createElement('INPUT')
-        element.setAttribute('type', 'checkbox');
-        element.addEventListener('click', (event) => this.onChange(event, this));
-        WizElement.call(this, element, step, options);
-    }
-
-    WizSwitch.prototype = WizElement;
 
     function WizElement(component, step, options) {
         // TODO: Add event listener method for WizElement, generalize WizSwitch & WizButton
