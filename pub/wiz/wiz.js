@@ -202,15 +202,15 @@ const Wiz = (function () {
                 // Fallthrough
                 case 'bottom':
                     this.stepsDisplay.setAttribute('style',
-                        `height:${this.layout.stepsDisplay}%`);
+                        `height:${this.layout.stepsDisplay * 100}%`);
                     break;
                 case 'left':
                     this.stepsDisplay.setAttribute('style',
-                        `float:left;width:${this.layout.stepsDisplay}%`);
+                        `float:left;width:${this.layout.stepsDisplay * 100}%`);
                     break;
                 case 'right':
                     this.stepsDisplay.setAttribute('style',
-                        `float:right;width:${this.layout.stepsDisplay}%`);
+                        `float:right;width:${this.layout.stepsDisplay * 100}%`);
                     break;
                 default:
                     console.error('Wiz Option Error: Invalid display (position).');
@@ -245,6 +245,8 @@ const Wiz = (function () {
         this.handleNextStep = handleNextStep;
         this.handleBackStep = handleBackStep;
         this._elements = {};
+        this._inputs = [];
+        this.numElements = 0;
         this._initOptions(options);
         this._initContainer(container);
         this._initEventHandlers();
@@ -255,9 +257,6 @@ const Wiz = (function () {
 
         addElement: function (element, options, parent) {
             let newWizElement = null;
-            if (options.name === undefined) {
-                throw new Error('Wiz Element Error: Error adding element, missing name.');
-            }
             if (options.name in this.getElements()) {
                 throw new Error(`Wiz Element Error: Error adding element, name ${options.name} already exists`)
             }
@@ -270,6 +269,10 @@ const Wiz = (function () {
                         break;
                     case 'WizText':
                         newWizElement = new WizText(this, options);
+                        break;
+                    case 'WizInput':
+                        newWizElement = new WizInput(this, options);
+                        this._inputs.push(options.name);
                         break;
                     default:
                         throw new Error('Wiz Element Error: Error adding element, predefined element does not exist.')
@@ -295,6 +298,7 @@ const Wiz = (function () {
             }
             // Add the new element to elements object
             this._elements[newWizElement.name] = newWizElement;
+            this.numElements++;
             return this;
         },
 
@@ -305,7 +309,7 @@ const Wiz = (function () {
             switch (event) {
                 case 'onStepNext':
                     this.onStepNext = (event) => {
-                        if (handler(event)) {
+                        if (handler(event, this)) {
                             this.handleNextStep();
                         } else {
                             this.onStepNextPrevented(event);
@@ -314,7 +318,7 @@ const Wiz = (function () {
                     break;
                 case 'onStepBack':
                     this.onStepBack = (event) => {
-                        if (handler(event)) {
+                        if (handler(event, this)) {
                             this.handleBackStep();
                         } else {
                             this.onStepBackPrevented(event);
@@ -323,18 +327,38 @@ const Wiz = (function () {
                     break;
                 case 'onStepNextPrevented':
                     this.onStepNextPrevented = (event) => {
-                        handler(event);
+                        handler(event, this);
                     }
                     break;
                 case 'onStepBackPrevented':
                     this.onStepBackPrevented = (event) => {
-                        handler(event);
+                        handler(event, this);
                     }
                     break;
                 default:
                     console.error('Wiz Event Error: Event ${event} is unspecified.');
             }
             return this;
+        },
+
+        getAllInput: function () {
+            return this._inputs.reduce((result, name) => {
+                const elem = this.getElement(name);
+                if (elem && elem.isValid) {
+                    result[name] = elem.value;
+                }
+                return result;
+            }, {});
+        },
+
+        validateAllInputs: function () {
+            for (const name of this._inputs) {
+                const elem = this.getElement(name);
+                if (elem && !elem.isValid) {
+                    return false;
+                }
+            }
+            return true;
         },
 
         _initContainer: function (container) {
@@ -503,8 +527,9 @@ const Wiz = (function () {
         _initOptions: function (options) {
             options = options || {};
             const {
-                name = this._step.getElements().length,
+                name = this._step.numElements.toString(),
                 isHidden = false,
+                isValid = true,
                 className = null,
                 width = '1',
                 height = '100px',
@@ -525,6 +550,7 @@ const Wiz = (function () {
             }
             this.name = name;
             this._isHidden = isHidden;
+            this.isValid = isValid;
             this.className = className;
             this.noSize = noSize;
         },
@@ -578,19 +604,39 @@ const Wiz = (function () {
     }
 
     function WizButton(step, options) {
-        if (!options.onChange) {
-            options.onChange = () => true;
+        if (options.onChange === undefined) {
+            options.onChange = () => {};
         }
-        this.onChange = options.onChange;
-        const element = document.createElement('BUTTON')
-        element.addEventListener('click', (event) => this.onChange(event, this));
+        if (!options.className) {
+            options.className = 'wiz-button--primary';
+        }
+
+        this.onChange = (e) => {
+            options.onChange(e, this);
+        }
+        const element = document.createElement('BUTTON');
         element.textContent = options.textContent;
+        element.addEventListener('click', this.onChange);
         WizElement.call(this, element, step, options);
+
+        this._validates = options.validates;
+        this.validate = () => {
+            this._validates.map((elem) => {
+                const wizElem = this._step.getElement(elem);
+                if (wizElem && !elem.isValid) {
+                    return false;
+                }
+            });
+            return true;
+        }
     }
 
     WizButton.prototype = WizElement.prototype;
 
     function WizText(step, options) {
+        if (!options.className) {
+            options.className = 'wiz-text';
+        }
         const element = document.createElement('DIV')
         const text = document.createTextNode(options.textContent);
         element.appendChild(text);
@@ -598,6 +644,39 @@ const Wiz = (function () {
     }
 
     WizText.prototype = WizElement.prototype;
+
+    function WizInput(step, options) {
+        if (!options.className) {
+            options.className = 'wiz-input';
+        }
+        if (options.onChange === undefined) {
+            options.onChange = () => {};
+        }
+
+        const element = document.createElement('INPUT')
+        element.value = '';
+        this.value = element.value;
+        this.onChange = (e) => {
+            this.value = e.target.value;
+            options.onChange(e, this);
+        }
+        element.addEventListener('input', this.onChange);
+        element.placeholder = options.textContent;
+        WizElement.call(this, element, step, options);
+
+        this.setError = (isError, message) => {
+            if (isError && this.isValid) {
+                this.isValid = false;
+                this._component.setCustomValidity(message);
+            } else if (!isError && !this.isValid) {
+                this.isValid = true;
+                this._component.setCustomValidity('');
+            }
+            this._component.reportValidity();
+        }
+    }
+
+    WizInput.prototype = WizElement.prototype;
 
     return Wiz;
 })();

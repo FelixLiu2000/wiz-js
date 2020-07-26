@@ -1,9 +1,11 @@
-.hidden {
+.wiz .hidden {
     display: none;
 }
 
 .wiz {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
     box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.3), -1px -1px 8px 1px rgba(0,0,0,0.1);
 }
 
@@ -21,6 +23,8 @@
 .wiz-content {
     display: grid;
     padding: 20px;
+    overflow: auto;
+    max-height: 100%;
 }
 
 .wiz-nav {
@@ -46,6 +50,16 @@
     height: 50px;
 }
 
+.wiz-input {
+    border: 0;
+    border-bottom: 1px solid black;
+}
+
+.wiz-text {
+    display: flex;
+    align-items: center;
+}
+
 .wiz-button--primary {
     background-color: darkblue;
     padding-left: 16px;
@@ -53,7 +67,8 @@
     text-align: center;
     color: white;
     border-radius: 4px;
-    transition-duration: 0.3s
+    transition-duration: 0.3s;
+    box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.3), -1px -1px 8px 1px rgba(0,0,0,0.1);
 }
 
 .wiz-button--primary:hover {
@@ -68,7 +83,8 @@
     color: darkblue;
     border: 1px solid gray;
     border-radius: 4px;
-    transition-duration: 0.3s
+    transition-duration: 0.3s;
+    box-shadow: 2px 2px 4px 1px rgba(0,0,0,0.3), -1px -1px 4px 1px rgba(0,0,0,0.1);
 }
 
 .wiz-button--secondary:hover {
