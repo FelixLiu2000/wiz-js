@@ -31,7 +31,7 @@ const wiz = new Wiz('wizard', {
 });
 wiz.getStep(0).addElement('WizInput', {
     name: 'textToAdd',
-    textContent: 'Enter text here',
+    textContent: 'Enter text here to add below',
     className: 'text-input',
     width: 9,
     height: '50px',
@@ -84,4 +84,9 @@ wiz.getStep(1).addElement('WizInput', {
     width: 12,
     height: '50px',
     onChange: validatePassword
+}).addElement('WizText', {
+    name: 'description',
+    textContent: 'Clicking FINISH will log the values in the input fields to the console, if they are valid.',
+    width: 12,
+    height: '50px'
 }).getElement('password').getComponent().type = 'password';
