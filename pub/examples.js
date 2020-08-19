@@ -29,18 +29,14 @@ const wiz = new Wiz('wizard', {
         return false;
     }
 });
-wiz.getStep(0).addElement('WizInput', {
+wiz.getStep(0).addElement('Input', {
     name: 'textToAdd',
     textContent: 'Enter text here to add below',
     className: 'text-input',
     width: 9,
     height: '50px',
-    onChange: (e, element) => {
-        if (e.target.value !== '' && !e.target.value.match(/^[a-zA-Z ]*$/)) {
-            element.setError(true, 'Error: text must only contain letters and spaces.');
-        } else {
-            element.setError(false);
-        }
+    validator: (value) => {
+        return value !== '' && !value.match(/^[a-zA-Z ]*$/);
     }
 }).addElement('WizButton', {
     name: 'addText',
