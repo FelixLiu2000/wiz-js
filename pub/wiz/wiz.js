@@ -126,6 +126,10 @@
                 this._attachStepContainer(stepContainer);
             }
             this.state.numSteps++;
+            // Add new step tab to stepsDisplay
+            this._addToStepsDisplay(newStep);
+            // Update contents of all steps
+            this._updateSteps();
             return this;
         },
 
@@ -144,13 +148,13 @@
             return this._steps;
         },
 
-        isFinal: function () {
-            return this.state.currentStep + 1 === this.state.numSteps;
+        isFinalStep: function (id) {
+            return id + 1 === this.state.numSteps;
         },
 
         onStepNext: function () {
             // Last step
-            if (this.isFinal()) {
+            if (this.isFinalStep(this.state.currentStep)) {
                 this.onSubmit();
             } else {
                 this._renderStep(this.state.currentStep + 1);
@@ -166,13 +170,23 @@
         },
 
         onSubmit: function () {
-            if (this.isFinal()) {
-                // TODO: Complete
+            if (this.isFinalStep(this.state.currentStep)) {
                 if (this.willHideOnSubmit) {
                     this.hide();
                 }
                 // Call on submit of final step
                 this.getStep().onSubmit();
+            }
+        },
+
+        setStep: function (id) {
+            try {
+                if (id !== this.state.currentStep) {
+                    this._renderStep(id);
+                    this.state.currentStep = id;
+                }
+            } catch {
+                throw new Error(`Wiz Step Error: Could not set current step to ${id}.`);
             }
         },
 
@@ -257,23 +271,8 @@
         },
 
         _initStepsDisplay: function (config) {
-            config = config || { isHidden: true, type: 'stepper', position: 'bottom' };
-            config.type = config.type || 'stepper';
+            config = config || { isHidden: false, position: 'bottom' };
             config.position = config.position || 'bottom';
-
-            if (config.type !== 'stepper' && config.type !== 'tabs') {
-                console.error('Wiz Option Error: Invalid display type.');
-                this.stepsDisplayConfig = {
-                    isHidden: true,
-                    type: null,
-                    position: null,
-                }
-                return;
-            }
-            this._initDisplayContainer(config);
-        },
-
-        _initDisplayContainer: function (config) {
             this.stepsDisplay = document.createElement('DIV');
             this.stepsDisplay.classList.add('wiz-display')
             if (config.isHidden) {
@@ -284,21 +283,23 @@
                 // Fallthrough
                 case 'bottom':
                     this.stepsDisplay.setAttribute('style',
-                        `height:${this.layout.stepsDisplay * 100}%`);
+                        `height:${this.layout.stepsDisplay * 100}%;flex-direction:row`);
+                    this.container.setAttribute('style', 'flex-direction: column');
                     break;
                 case 'left':
                     this.stepsDisplay.setAttribute('style',
-                        `float:left;width:${this.layout.stepsDisplay * 100}%`);
+                        `float:left;width:${this.layout.stepsDisplay * 100}%;flex-direction:column`);
+                    this.container.setAttribute('style', 'flex-direction: row');
                     break;
                 case 'right':
                     this.stepsDisplay.setAttribute('style',
-                        `float:right;width:${this.layout.stepsDisplay * 100}%`);
+                        `float:right;width:${this.layout.stepsDisplay * 100}%;flex-direction:column`);
+                    this.container.setAttribute('style', 'flex-direction: row');
                     break;
                 default:
                     console.error('Wiz Option Error: Invalid display (position).');
                     this.stepsDisplayConfig = {
                         isHidden: true,
-                        type: null,
                         position: null,
                     }
                     return;
@@ -321,6 +322,29 @@
             this.stepsConfig = config;
         },
 
+        _addToStepsDisplay: function (newStep) {
+            const newTab = new WizElement('WizButton', newStep, {
+                name: `_displayTab${newStep.id}`,
+                noSize: true,
+                textContent: newStep.header,
+                className: 'wiz-display__tab',
+                on: {
+                    'click': (e) => {
+                        // Linear step navigation is enforced
+                        if (this.isLinear) {
+                            // If moving to a previous step and stepping back is allowed
+                            if (newStep.id < this.state.currentStep && !this.preventBack) {
+                                this.setStep(newStep.id);
+                            }
+                        } else {
+                            this.setStep(newStep.id);
+                        }
+                    }
+                }
+            });
+            this.stepsDisplay.appendChild(newTab.getComponent());
+        },
+
         show: function () {
             if (this.isHidden) {
                 this.container.style.display = this._initialDisplay;
@@ -330,6 +354,12 @@
         hide: function () {
             if (!this.isHidden) {
                 this.container.style.display = 'none';
+            }
+        },
+
+        _updateSteps: function () {
+            for (const step of this._steps) {
+                step._update();
             }
         }
     }
@@ -381,7 +411,7 @@
         },
 
         _initContainer: function (container) {
-            const contentContainer = document.createElement('DIV');
+            const contentContainer = document.createElement('FORM');
             container.appendChild(contentContainer);
             this.addElement(container, {
                 name: 'container',
@@ -477,26 +507,30 @@
                 .addElement('WizButton', {
                     name: 'stepBack',
                     noSize: true,
-                    isHidden: this.preventBack,
+                    isHidden: this.preventBack || this.id === 0,
                     textContent: 'BACK',
-                    onChange: (e) => {
-                        e.preventDefault();
-                        this.onStepBack(e);
+                    on: {
+                        'click': (e) => {
+                            e.preventDefault();
+                            this.onStepBack(e);
+                        }
                     },
                     className: 'wiz-button--secondary'
                 }, 'navContainer')
                 .addElement('WizButton', {
                     name: 'stepNext',
                     noSize: true,
-                    textContent: this.getWizard().isFinal() ? 'FINISH' : 'NEXT',
-                    onChange: (e) => {
-                        e.preventDefault();
-                        // Refresh error highlights
-                        this.refreshErrorHighlights();
-                        if (this.hasError()) {
-                            this.onStepNextPrevented(e);
-                        } else {
-                            this.onStepNext(e);
+                    textContent: this.getWizard().isFinalStep(this.id) ? 'FINISH' : 'NEXT',
+                    on: {
+                        'click': (e) => {
+                            e.preventDefault();
+                            // Refresh error highlights
+                            this.refreshErrorHighlights();
+                            if (this.hasError()) {
+                                this.onStepNextPrevented(e);
+                            } else {
+                                this.onStepNext(e);
+                            }
                         }
                     },
                     className: 'wiz-button--primary'
@@ -589,6 +623,7 @@
 
         addError: function (elementName) {
             this._elementErrors[elementName] = true;
+            console.log(this._elementErrors);
             return this;
         },
 
@@ -596,6 +631,7 @@
             if (this._elementErrors[elementName]) {
                 delete this._elementErrors[elementName];
                 this.getElement(elementName).hideError();
+                console.log(this._elementErrors);
             }
             return this;
         },
@@ -611,11 +647,23 @@
         },
 
         getAllInputValues: function () {
-            return this.getElements().reduce((result, currElem) => {
+            return Object.values(this.getElements()).reduce((result, currElem) => {
                 if (currElem.isInput) {
                     result[currElem.name] = currElem.value;
                 }
+                return result;
             }, {});
+        },
+
+        _update: function () {
+            // Update nav buttons
+            console.log(this.id, this.getWizard().isFinalStep(this.id));
+            if (this.preventBack || this.id === 0) {
+                this.getElement('stepBack').hide();
+            } else {
+                this.getElement('stepBack').show();
+            }
+            this.getElement('stepNext').getComponent().textContent = this.getWizard().isFinalStep(this.id) ? 'FINISH' : 'NEXT';
         }
     }
 
@@ -763,8 +811,7 @@
             return this;
         },
 
-        setError: function(isError, message) {
-            console.log(isError, message);
+        setError: function (isError, message) {
             if (isError && !this.hasError) {
                 this.hasError = true;
                 this._component.setCustomValidity(message);
@@ -772,20 +819,19 @@
             } else if (!isError && this.hasError) {
                 this.hasError = false;
                 this._component.setCustomValidity('');
-                this._step.removeError();
+                this._step.removeError(this.name);
             }
             this._component.reportValidity();
-            console.log(this);
             return this;
         },
 
-        showError: function() {
+        showError: function () {
             if (this.hasError && !this._component.classList.contains('wiz-input--error')) {
                 this.addClass('wiz-input--error');
             }
         },
 
-        hideError: function() {
+        hideError: function () {
             if (!this.hasError && this._component.classList.contains('wiz-input--error')) {
                 this.removeClass('wiz-input--error');
             }

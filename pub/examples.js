@@ -1,31 +1,35 @@
-function validateUsername(e, element) {
-    if (e.target.value !== '' && !e.target.value.match(/^\w*$/)) {
-        element.setError(true, `Error: username cannot contain spaces or symbols other than '_'`);
-    } else {
-        element.setError(false);
+function validateUsername(value) {
+    if (value === '' || !value.match(/^\w*$/)) {
+        return `Error: username cannot contain spaces or symbols other than '_'`;
     }
+    return true;
 }
 
-function validatePassword(e, element) {
-    if (e.target.value !== '' && !e.target.value.match(/^\S*$/)) {
-        element.setError(true, `Error: username cannot contain spaces or symbols other than '_'`);
-    } else {
-        element.setError(false);
+function validatePassword(value) {
+    if (value === '' || !value.match(/^\S*$/)) {
+       return `Error: username cannot contain spaces or symbols other than '_'`;
     }
+    return true;
 }
 
 // Wiz implementation
 const wiz = new Wiz('wizard', {
     layout: {
         stepsContent: 0.9
+    },
+    stepsDisplay: {
+        position: 'bottom'
     }
 }).addStep({
-    isFinal: true,
+    header: 'WizText Test'
+}).addStep({
+    header: 'Form Test',
     onStepNext: (e, step) => {
         console.log(step.getAllInputValues());
         return true;
     }
-}).addStep();
+})
+    .addStep({header: 'fdsfdsfsdfsdfsdfdfdfdfdffd'});
 wiz.getStep(0).addElement('WizInput', {
         name: 'textToAdd',
         textContent: 'Enter text here to add below',

@@ -4,13 +4,17 @@
 
 .wiz {
     display: flex;
-    flex-direction: column;
-    justify-content: space-between;
     box-shadow: 3px 3px 8px 1px rgba(0,0,0,0.3), -1px -1px 8px 1px rgba(0,0,0,0.1);
 }
 
 .wiz-display {
-    display: grid;
+    display: flex;
+}
+
+.wiz .wiz-display__tab{
+    flex-grow: 1;
+    border-radius: 0;
+    border: 2px solid white;
 }
 
 .wiz-step {
@@ -18,6 +22,7 @@
     flex-direction: column;
     justify-content: space-between;
     height: 100%;
+    width: 100%;
 }
 
 .wiz-content {
@@ -55,8 +60,7 @@
 }
 
 .wiz-input--error {
-    display: flex;
-    align-items: center;
+    box-shadow: 0 0 5px red;
 }
 
 .wiz-input--secondary {
