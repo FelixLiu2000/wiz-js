@@ -19,41 +19,45 @@ const wiz = new Wiz('wizard', {
     layout: {
         stepsContent: 0.9
     }
-}).addStep({}).addStep({
+}).addStep({
     isFinal: true,
     onStepNext: (e, step) => {
-        if (step.validateAllInputs()) {
-            console.log(step.getAllInput());
-            return true;
+        console.log(step.getAllInputValues());
+        return true;
+    }
+}).addStep();
+wiz.getStep(0).addElement('WizInput', {
+        name: 'textToAdd',
+        textContent: 'Enter text here to add below',
+        className: 'text-input',
+        width: 9,
+        height: '50px',
+        validator: (value) => {
+            if (value !== '' && value.match(/^[a-zA-Z]*$/)) {
+                return true;
+            } else {
+                return 'Error: Input invalid.';
+            }
         }
-        return false;
-    }
-});
-wiz.getStep(0).addElement('Input', {
-    name: 'textToAdd',
-    textContent: 'Enter text here to add below',
-    className: 'text-input',
-    width: 9,
-    height: '50px',
-    validator: (value) => {
-        return value !== '' && !value.match(/^[a-zA-Z ]*$/);
-    }
-}).addElement('WizButton', {
-    name: 'addText',
-    textContent: 'ADD',
-    width: 3,
-    height: '50px',
-    validates: ['textToAdd'],
-    onChange: (e, element) => {
-        if (element.validate()) {
-            element.getStep().addElement('WizText', {
-                textContent: element.getStep().getElement('textToAdd').value,
-                width: 12,
-                height: '50px'
-            })
+    })
+    .addElement('WizButton', {
+        name: 'addText',
+        textContent: 'ADD',
+        width: 3,
+        height: '50px',
+        on: {
+            'click': (e, element) => {
+                const textInput = element.getStep().getElement('textToAdd');
+                if (!textInput.hasError) {
+                    element.getStep().addElement('WizText', {
+                        textContent: textInput.value,
+                        width: 12,
+                        height: '50px'
+                    });
+                }
+            }
         }
-    }
-});
+    });
 wiz.getStep(1).addElement('WizInput', {
     name: 'firstName',
     textContent: 'First Name',
@@ -72,14 +76,14 @@ wiz.getStep(1).addElement('WizInput', {
     className: 'text-input',
     width: 12,
     height: '50px',
-    onChange: validateUsername
+    validator: validateUsername
 }).addElement('WizInput', {
     name: 'password',
     textContent: 'Password',
     className: 'text-input',
     width: 12,
     height: '50px',
-    onChange: validatePassword
+    validator: validatePassword
 }).addElement('WizText', {
     name: 'description',
     textContent: 'Clicking FINISH will log the values in the input fields to the console, if they are valid.',

@@ -50,7 +50,21 @@
     height: 50px;
 }
 
-.wiz-input {
+.wiz-input--primary {
+    border-radius: 2px;
+}
+
+.wiz-input--error {
+    display: flex;
+    align-items: center;
+}
+
+.wiz-input--secondary {
+    border: 0;
+    border-bottom: 1px solid black;
+}
+
+.wiz-input--secondary:focus {
     border: 0;
     border-bottom: 1px solid black;
 }
