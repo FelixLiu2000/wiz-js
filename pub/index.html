@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>WizJS</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="wiz/styles.css">
+    <link rel="stylesheet" type="text/css" href="index.css">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto&display=swap" rel="stylesheet">
+</head>
+<body>
+<div class="root">
+    <h1>Wiz.js</h1>
+    <div id="description">
+        A vanilla Javascript library for creating highly customizable, modern-looking wizard interfaces.
+    </div>
+    <div id="nav">
+        <button onClick="document.querySelector('#examples').scrollIntoView({behaviour: 'smooth', block: 'start'});"
+                class="nav__button">
+            EXAMPLES
+        </button>
+        <button class="nav__button">
+            API
+        </button>
+    </div>
+    <div id="examples">
+        <h2>
+            Examples
+        </h2>
+        <div class="example">
+            <h3>
+                A simple form with validation.
+            </h3>
+            <div id="example1" class="wizard"></div>
+            <button class="nav__button" onClick="document.querySelector('#code1').style.display='block'">
+                Show Code
+            </button>
+            <pre id="code1">
+                <code>
+                    const example1 = new Wiz('example1', {
+                        stepsDisplay: {
+                            isHidden: true
+                        }
+                    });
+                    example1.addStep({
+                            onSubmit: (e, form) => {
+                                let result = ''
+                                for (const [key, value] of Object.entries(form.getAllInputValues())) {
+                                    result = result.concat(`${key}: ${value}\n`);
+                                }
+                            }
+                        })
+                        .getStep()
+                        .addElement('WizInput', {
+                            variant: 'primary',
+                            name: 'firstName',
+                            textContent: 'First Name',
+                            width: 6,
+                            height: '50px'
+                        }).addElement('WizInput', {
+                            variant: 'primary',
+                            name: 'lastName',
+                            textContent: 'Last Name',
+                            width: 6,
+                            height: '50px'
+                        })
+                        .addElement('WizInput', {
+                            name: 'username',
+                            textContent: 'Username',
+                            width: 12,
+                            height: '50px',
+                            validator: (value) => {
+                                if (value === '' || !value.match(/^\w*$/)) {
+                                    return `Error: username cannot contain spaces or symbols other than '_'`;
+                                }
+                                return true;
+                            }
+                        }).addElement('WizInput', {
+                            name: 'password',
+                            textContent: 'Password',
+                            width: 12,
+                            height: '50px',
+                            validator: (value) => {
+                                if (value === '' || !value.match(/^\S*$/)) {
+                                    return `Error: username cannot contain spaces or symbols other than '_'`;
+                                }
+                                return true;
+                            },
+                            isPassword: true
+                        });
+
+                </code>
+            </pre>
+        </div>
+        <div class="example">
+            <h3>
+                A multi-step wizard.
+            </h3>
+            <div id="example2" class="wizard"></div>
+            <button class="nav__button" onClick="document.querySelector('#code2').style.display='block'">
+                Show Code
+            </button>
+            <pre id="code2">
+                <code>
+                    const example2 = new Wiz('example2', {
+                        layout: {
+                            stepsContent: 0.85
+                        },
+                        stepsDisplay: {
+                            position: 'bottom'
+                        }
+                    });
+                    example2.addStep({
+                            header: "Welcome"
+                        })
+                        .addStep({
+                            header: "Register"
+                            onSubmit: (e, form) => {
+                                let result = ''
+                                for (const [key, value] of Object.entries(form.getAllInputValues())) {
+                                    result = result.concat(`${key}: ${value}\n`);
+                                }
+                            }
+                        })
+                        .getStep(0)
+                        .addElement('WizText', {
+                            width: 12,
+                            textContent: 'WELCOME!',
+                            height: '100px',
+                            className: 'custom-text__header'
+                        })
+                        .addElement('WizText', {
+                            width: 12,
+                            textContent: 'Please register on the next step.',
+                            height: '100px',
+                            className: 'custom-text__subtitle'
+                        });
+                    example2.getStep()
+                        .addElement('WizInput', {
+                            variant: 'primary',
+                            name: 'firstName',
+                            textContent: 'First Name',
+                            width: 6,
+                            height: '50px'
+                        }).addElement('WizInput', {
+                            variant: 'primary',
+                            name: 'lastName',
+                            textContent: 'Last Name',
+                            width: 6,
+                            height: '50px'
+                        })
+                        .addElement('WizInput', {
+                            name: 'username',
+                            textContent: 'Username',
+                            width: 12,
+                            height: '50px',
+                            validator: (value) => {
+                                if (value === '' || !value.match(/^\w*$/)) {
+                                    return `Error: username cannot contain spaces or symbols other than '_'`;
+                                }
+                                return true;
+                            }
+                        }).addElement('WizInput', {
+                        name: 'password',
+                        textContent: 'Password',
+                        width: 12,
+                        height: '50px',
+                        validator: (value) => {
+                            if (value === '' || !value.match(/^\S*$/)) {
+                                return `Error: username cannot contain spaces or symbols other than '_'`;
+                            }
+                            return true;
+                        },
+                        isPassword: true
+                    });
+                </code>
+            </pre>
+        </div>
+    </div>
+</div>
+<script defer type="text/javascript" src='index.js'></script>
+<script type="text/javascript" src='wiz/wiz.js'></script>
+</body>
+</html>

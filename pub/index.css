@@ -1,0 +1,81 @@
+html, body {
+    margin: 0;
+    padding: 0;
+    font-family: 'Roboto', sans-serif;
+}
+
+.root {
+    display: block;
+}
+
+h1 {
+    margin: 100px 0 50px;
+    text-align: center;
+    font-size: 72pt;
+}
+
+#description {
+    text-align: center;
+    font-size: 18pt;
+}
+
+#nav {
+    text-align: center;
+    align-items: center;
+    margin: 50px 0;
+}
+
+.nav__button {
+    margin: 5px 5px;
+    background-color: rgba(0,0,0,0);
+    padding-left: 6px;
+    padding-right: 6px;
+    text-align: center;
+    color: black;
+    border-radius: 4px;
+    border: 4px solid black;
+    transition-duration: 0.15s;
+    font-size: 16pt;
+    font-weight: bold;
+}
+
+#examples {
+    margin: 500px 50px 0;
+}
+
+h2 {
+    font-size: 36pt;
+}
+
+.example {
+    margin: 0 50px;
+}
+
+.custom-text__header {
+    font-size: 32pt;
+    font-weight: bold;
+    color: blue;
+    text-align: center;
+}
+
+.custom-text__subtitle {
+    font-size: 20pt;
+    font-weight: bold;
+    color: black;
+    text-align: center;
+}
+
+.wizard {
+    width: 800px;
+    height: 500px;
+}
+
+h3 {
+    font-size: 18pt;
+    color: cornflowerblue;
+}
+
+pre {
+    background-color: lightgray;
+    display: none;
+}

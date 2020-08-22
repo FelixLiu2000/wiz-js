@@ -623,7 +623,6 @@
 
         addError: function (elementName) {
             this._elementErrors[elementName] = true;
-            console.log(this._elementErrors);
             return this;
         },
 
@@ -631,7 +630,6 @@
             if (this._elementErrors[elementName]) {
                 delete this._elementErrors[elementName];
                 this.getElement(elementName).hideError();
-                console.log(this._elementErrors);
             }
             return this;
         },
@@ -657,7 +655,6 @@
 
         _update: function () {
             // Update nav buttons
-            console.log(this.id, this.getWizard().isFinalStep(this.id));
             if (this.preventBack || this.id === 0) {
                 this.getElement('stepBack').hide();
             } else {
@@ -717,7 +714,8 @@
                 height = '100px',
                 noSize = false,
                 isInput = false,
-                validator = null
+                validator = null,
+                isPassword = false
             } = options;
             if (name in this._step.getElements()) {
                 throw new Error(`Wiz Element Error: Element with name ${name} already exists.`);
@@ -744,6 +742,9 @@
             if (isInput) {
                 this.value = null;
                 this.validator = validator;
+                if (isPassword) {
+                    this.getComponent().type = 'password';
+                }
             }
 
             if (isHidden) {
