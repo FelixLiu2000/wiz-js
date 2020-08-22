@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>WizJS</title>
+    <title>Wiz.js</title>
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <link rel="stylesheet" type="text/css" href="wiz/styles.css">
     <link rel="stylesheet" type="text/css" href="index.css">
@@ -19,11 +19,13 @@
                 class="nav__button">
             EXAMPLES
         </button>
-        <button class="nav__button">
+        <button class="nav__button"
+                onClick="document.querySelector('#api').scrollIntoView({behaviour: 'smooth', block: 'start'});">
             API
         </button>
     </div>
-    <div id="examples">
+    <div id=" examples
+        ">
         <h2>
             Examples
         </h2>
@@ -176,6 +178,157 @@
                 </code>
             </pre>
         </div>
+    </div>
+    <div id="api">
+        <h2>
+            API
+        </h2>
+        <h3>
+            Getting Started
+        </h3>
+        <div class="api__text">
+            Wiz.js offers a default configuration to let you get started quickly with a blank wizard. <br>
+            - First, include Wiz.js and its stylesheet in your project's HTML code. <br>
+            - Add a &lt;div&gt; element with an id of your choosing. Set the height and width of your wizard through
+            by styling the &lt;div&gt;element as desired.
+        </div>
+        <pre style="display: block">
+
+            HTML
+            <code>
+                &lt;html&gt;
+                    &lt;head&gt;
+                        ...
+                        &lt;link rel="stylesheet" type="text/css" href="wiz/styles.css"&gt;
+                        ...
+                    &lt;/head&gt;
+                    &lt;body&gt;
+                        ...
+                        &lt;div id='wizard'&gt;&lt;/div&gt;
+                        ...
+                        &lt;script type="text/javascript" src='wiz/wiz.js'&gt;&lt;/script&gt;
+                    &lt;/body&gt;
+                &lt;html&gt;
+            </code>
+            CSS
+            <code>
+                // Set the height and width of the DIV
+                .wizard {
+                    height: 800px;
+                    width: 800px;
+                }
+            </code>
+        </pre>
+        Finally, initialize the wizard in your site's Javascript code by providing the id of your &lt;div&gt;, and add your first step with a heading of your choosing.
+        <pre style="display: block">
+            <code>
+                const wizard = new Wiz('wizard');
+                wizard.addStep({
+                    header: 'Step 1'
+                });
+            </code>
+        </pre>
+        Now you have a blank wizard, ready for new elements and steps!
+
+        <h3>
+            Adding Elements
+        </h3>
+        <div class="api__text">
+            Wiz.js features several built-in elements, styled with Material design principles in mind, to quickly create a new form. <br>
+            It also uses method chaining to make your workflow even quicker.<br><br>
+            To start, get the step you want to work with, then use method chaining to create a new element of type 'WizButton', 'WizText', or 'WizInput'. <br>
+            Below, we add elements to the 0th step of the wizard we just created.
+        </div>
+        <pre style="display: block">
+            <code>
+                wizard.getStep(0)
+                    .addElement('WizText' {
+                        textContent: 'HELLO'
+                    })
+            </code>
+        </pre>
+        <div class="api__text">
+            The above code renders the text 'HELLO' to the step, with a default height and width. <br> <br>
+
+            Wiz.js uses the CSS grid system to size and layout each element. By default, the wizard uses a 12 column grid. <br>
+            We create a new text element with height 50px and a width of 2 columns below.
+        </div>
+        <pre style="display: block">
+            <code>
+                wizard.getStep(0)
+                    .addElement('WizText' {
+                        textContent: 'HELLO',
+                        height: '50px',
+                        width: 2
+                    })
+            </code>
+        </pre>
+        <h3>
+            Form Validation
+        </h3>
+        <div class="api__text">
+            The default input of Wiz.js, 'WizInput', self-validates its value on the fly using a function of your choosing. <br>
+            The wizard will also ensure that all inputs of a step are valid before advancing to the next step. <br>
+            A validator function must return a string containing an error message if there is an error, and true if the value is valid. <br>
+            We create a new input with a validator below.
+        </div>
+        <pre style="display: block">
+            <code>
+                wizard.getStep(0)
+                    .addElement('WizText' {
+                        textContent: 'HELLO',
+                        height: '50px',
+                        width: 2
+                    })
+                    .addElement('WizInput' {
+                        name: 'username',
+                        textContent: 'Username',
+                        width: 12,
+                        height: '50px',
+                        validator: (value) => {
+                            if (value.trim() === '') {
+                                return 'Your username can't be empty!';
+                            }
+                            return true;
+                        }
+                    })
+            </code>
+        </pre>
+        <h3>
+            Events
+        </h3>
+        <div class="api__text">
+            All default elements provided by Wiz.js accept an 'on' object in their options parameter that specifies a default HTML event and an attached event listener function. <br>
+            We can use this to attach actions to a 'WizButton'.
+        </div>
+        <pre style="display: block">
+            <code>
+                wizard.getStep(0)
+                    .addElement('WizText' {
+                        textContent: 'HELLO',
+                        height: '50px',
+                        width: 2
+                    })
+                    .addElement('WizInput' {
+                        name: 'username',
+                        textContent: 'Username',
+                        width: 12,
+                        height: '50px',
+                        validator: (value) => {
+                            if (value.trim() === '') {
+                                return 'Your username can't be empty!';
+                            }
+                            return true;
+                        }
+                    })
+                    .addElement('WizButton' {
+                        on: {
+                            'click' : () => { alert('CLICKED!'); }
+                        },
+                        textContent: 'Click me!'
+                    })
+            </code>
+        </pre>
     </div>
 </div>
 <script defer type="text/javascript" src='index.js'></script>

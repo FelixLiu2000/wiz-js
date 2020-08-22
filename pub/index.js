@@ -1,8 +1,5 @@
 // Wizard for first example
 const example1 = new Wiz('example1', {
-    stepsDisplay: {
-        isHidden: true
-    }
 });
 example1.addStep({
         onSubmit: (e, form) => {

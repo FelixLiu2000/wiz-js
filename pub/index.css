@@ -79,3 +79,12 @@ pre {
     background-color: lightgray;
     display: none;
 }
+
+#api {
+    margin: 500px 50px 0;
+}
+
+.api__text {
+    font-size: 14pt;
+    margin: 10px 50px;
+}
